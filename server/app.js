@@ -5,10 +5,12 @@ const dotenv = require('dotenv');
 const dns = require('dns');
 const courseRoutes = require('./routes/courseRoutes');
 const authRoutes = require('./routes/authRoutes');
+const cors =require("cors")
 
 dns.setServers(['1.1.1.1', '8.8.8.8']);
 dotenv.config();
 app.use(express.json())
+app.use(cors())
 app.use('/api/auth',authRoutes)
 app.use("/api/courses",courseRoutes)
 
