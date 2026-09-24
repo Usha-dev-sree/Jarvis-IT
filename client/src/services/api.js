@@ -1,4 +1,4 @@
-const API_URL = 'http://localhost:3000/api';
+const API_URL = 'https://jarvis-it.onrender.com/api';
 
 export async function apiRequest(path, method = 'GET', data = null, token = '') {
   const headers = { 'Content-Type': 'application/json' };
