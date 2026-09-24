@@ -1,9 +1,11 @@
 import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { apiRequest } from '../services/api.js';
 import CourseCard from '../components/CourseCard.jsx';
 import CourseForm from '../components/CourseForm.jsx';
 
-export default function CoursesPage({ token, onMessage, onSignIn }) {
+export default function CoursesPage({ token, onMessage }) {
+  const navigate = useNavigate();
   const [courses, setCourses] = useState([]);
   const [query, setQuery] = useState('');
   const [selected, setSelected] = useState(undefined);
@@ -16,16 +18,22 @@ export default function CoursesPage({ token, onMessage, onSignIn }) {
     } catch (error) { onMessage(error.message); }
   }
 
-  useEffect(() => { loadCourses(); }, []);
+  useEffect(() => {
+    let cancelled = false;
+    apiRequest('/courses')
+      .then(data => {
+        if (!cancelled) setCourses(Array.isArray(data) ? data : data.courses || []);
+      })
+      .catch(error => onMessage(error.message));
+    return () => { cancelled = true; };
+  }, [onMessage]);
 
   async function saveCourse(values) {
-    if (!token) { setSelected(undefined); onMessage('Sign in as an instructor to manage courses.'); onSignIn(); return; }
+    if (!token) { setSelected(undefined); onMessage('Sign in as an instructor to manage courses.'); navigate('/login'); return; }
     setBusy(true);
     const courseId = selected?._id || selected?.id;
     try {
-      await apiRequest(`/courses${courseId ? `/${courseId}` : ''}`, {
-        method: courseId ? 'PUT' : 'POST', body: JSON.stringify(values),
-      }, token);
+      await apiRequest(`/courses${courseId ? `/${courseId}` : ''}`, courseId ? 'PUT' : 'POST', values, token);
       setSelected(undefined);
       onMessage(courseId ? 'Course updated.' : 'Course created.');
       await loadCourses();
@@ -34,10 +42,10 @@ export default function CoursesPage({ token, onMessage, onSignIn }) {
   }
 
   async function deleteCourse(id) {
-    if (!token) { onMessage('Sign in as an instructor to manage courses.'); onSignIn(); return; }
+    if (!token) { onMessage('Sign in as an instructor to manage courses.'); navigate('/login'); return; }
     if (!window.confirm('Delete this course?')) return;
     try {
-      await apiRequest(`/courses/${id}`, { method: 'DELETE' }, token);
+      await apiRequest(`/courses/${id}`, 'DELETE', null, token);
       onMessage('Course deleted.');
       await loadCourses();
     } catch (error) { onMessage(error.message); }

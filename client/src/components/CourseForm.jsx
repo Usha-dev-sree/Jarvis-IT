@@ -1,6 +1,6 @@
 import { useState } from 'react';
 
-const emptyCourse = { title: '', description: '', instructor: '', category: '', level: 'Beginner', price: 0, duration: 1 };
+const emptyCourse = { title: '', description: '', category: '', level: 'Beginner', price: 0, duration: 1 };
 
 export default function CourseForm({ course, busy, onCancel, onSave }) {
   const [form, setForm] = useState({ ...emptyCourse, ...(course || {}) });
@@ -11,7 +11,9 @@ export default function CourseForm({ course, busy, onCancel, onSave }) {
 
   function submit(event) {
     event.preventDefault();
-    onSave({ ...form, price: Number(form.price), duration: Number(form.duration) });
+    const courseFields = { ...form };
+    delete courseFields.instructor;
+    onSave({ ...courseFields, price: Number(form.price), duration: Number(form.duration) });
   }
 
   return <div className="modal-backdrop" onMouseDown={event => { if (event.target === event.currentTarget) onCancel(); }}>
@@ -20,10 +22,7 @@ export default function CourseForm({ course, busy, onCancel, onSave }) {
       <form className="form" onSubmit={submit}>
         <label>Title<input name="title" value={form.title} onChange={update} required /></label>
         <label>Description<textarea name="description" rows="3" value={form.description} onChange={update} required /></label>
-        <div className="form-row">
-          <label>Instructor<input name="instructor" value={form.instructor} onChange={update} required /></label>
-          <label>Category<input name="category" value={form.category} onChange={update} required /></label>
-        </div>
+        <label>Category<input name="category" value={form.category} onChange={update} required /></label>
         <div className="form-row">
           <label>Level<select name="level" value={form.level} onChange={update}><option>Beginner</option><option>Intermediate</option><option>Advanced</option></select></label>
           <label>Duration (hours)<input name="duration" type="number" min="1" value={form.duration} onChange={update} required /></label>

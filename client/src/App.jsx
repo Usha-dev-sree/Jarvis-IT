@@ -1,27 +1,46 @@
 import { useState } from 'react';
+import { BrowserRouter, Navigate, Route, Routes, useNavigate } from 'react-router-dom';
 import Navbar from './components/Navbar.jsx';
-import AuthPage from './pages/AuthPage.jsx';
+import HomePage from './pages/HomePage.jsx';
 import CoursesPage from './pages/CoursesPage.jsx';
-import { AuthProvider, useAuth } from './context/AuthContext.jsx';
+import LoginPage from './pages/LoginPage.jsx';
+import RegisterPage from './pages/RegisterPage.jsx';
 import './App.css';
+import './routing.css';
 
-function AppContent() {
-  const [page, setPage] = useState('courses');
+function AppLayout() {
+  const [token, setToken] = useState(() => localStorage.getItem('lms_token') || '');
   const [message, setMessage] = useState('');
-  const { token } = useAuth();
+  const navigate = useNavigate();
 
-  return <>   
-    <Navbar onNavigate={setPage} onMessage={setMessage} />
+  function login(newToken) {
+    localStorage.setItem('lms_token', newToken);
+    setToken(newToken);
+  }
+
+  function logout() {
+    localStorage.removeItem('lms_token');
+    setToken('');
+    setMessage('You are signed out.');
+    navigate('/');
+  }
+
+  return <>
+    <Navbar token={token} onLogout={logout} />
     <main className="container">
       {message && <div className="message" role="status">{message}<button onClick={() => setMessage('')}>×</button></div>}
-      {page === 'auth'
-        ? <AuthPage onSuccess={() => { setPage('courses'); setMessage('You are signed in.'); }} onMessage={setMessage} />
-        : <CoursesPage token={token} onMessage={setMessage} onSignIn={() => setPage('auth')} />}
+      <Routes>
+        <Route path="/" element={<HomePage />} />
+        <Route path="/courses" element={<CoursesPage token={token} onMessage={setMessage} />} />
+        <Route path="/login" element={<LoginPage onLogin={login} onMessage={setMessage} />} />
+        <Route path="/register" element={<RegisterPage onMessage={setMessage} />} />
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
     </main>
     <footer className="footer">Learnly · Keep learning, one course at a time.</footer>
   </>;
 }
 
 export default function App() {
-  return <AuthProvider><AppContent /></AuthProvider>;
+  return <BrowserRouter><AppLayout /></BrowserRouter>;
 }

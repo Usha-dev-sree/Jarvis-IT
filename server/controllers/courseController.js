@@ -83,13 +83,17 @@ async function deleteCourse(req, res) {
                 message: "Course not found"
             });
         }
-
+        if(req.user.role !=="instructor"&&(!course.instructor||!course.instructor.equals(req.user._id)))
+        {
+            return res.status(403).send({
+                message :"YOU CAN ONLY DELETE THE COURSE WHICH YOU HAVE CREATED"
+            })
+        }
         await Course.findByIdAndDelete(id);
 
         return res.status(200).send({
             message: "Course deleted successfully"
         });
-
     } catch (error) {
         return res.status(500).send({
             message: "Unable to delete course",
@@ -102,15 +106,15 @@ async function updateCourse(req, res) {
     try {
         const { id } = req.params;
 
-        const {
-            title,
-            description,
-            category,
-            level,
-            price,
-            duration,
-            instructor
-        } = req.body;
+        const editableFields = [
+            "title",
+            "description",
+            "category",
+            "level",
+            "price",
+            "duration",
+            "instructor"
+        ];
 
         const course = await Course.findById(id);
 
@@ -120,13 +124,11 @@ async function updateCourse(req, res) {
             });
         }
 
-        course.title = title || course.title;
-        course.description = description || course.description;
-        course.category = category || course.category;
-        course.level = level || course.level;
-        course.instructor = instructor || course.instructor;
-        course.price = price !== undefined ? price : course.price;
-        course.duration = duration !== undefined ? duration : course.duration;
+        editableFields.forEach((field) => {
+            if (req.body[field] !== undefined) {
+                course[field] = req.body[field];
+            }
+        });
 
         await course.save();
 
@@ -148,21 +150,21 @@ async function getCourseByID(req, res) {
     try {
         const { id } = req.params;
 
-        const course = await Course.findById(id);
+        const course = await Course.findById(id).populate(
+            "instructor",
+            "name email role"
+        );
 
         if (!course) {
             return res.status(404).send({
-                message: "Course not found"
+                message: "Bad Request : Course not found"
             });
         }
 
         return res.status(200).send(course);
 
     } catch (error) {
-        return res.status(500).send({
-            message: "Unable to access course",
-            error: error.message
-        });
+        console.log("Hello")
     }
 }
 

@@ -1,21 +1,14 @@
-import { useAuth } from '../context/AuthContext.jsx';
+import { Link, NavLink } from 'react-router-dom';
 
-export default function Navbar({ onNavigate, onMessage }) {
-  const { token, logout } = useAuth();
-
-  function handleSignOut() {
-    logout();
-    onNavigate('courses');
-    onMessage('You are signed out.');
-  }
-
+export default function Navbar({ token, onLogout }) {
   return <header className="navbar">
-    <a className="brand" href="#courses" onClick={event => { event.preventDefault(); onNavigate('courses'); }}>learnly<span>.</span></a>
+    <Link className="brand" to="/">learnly<span>.</span></Link>
     <nav className="nav-links" aria-label="Main navigation">
-      <button onClick={() => onNavigate('courses')}>Courses</button>
+      <NavLink to="/">Home</NavLink>
+      <NavLink to="/courses">Courses</NavLink>
       {token
-        ? <button className="nav-primary" onClick={handleSignOut}>Sign out</button>
-        : <button className="nav-primary" onClick={() => onNavigate('auth')}>Sign in</button>}
+        ? <button className="nav-primary" onClick={onLogout}>Sign out</button>
+        : <><NavLink to="/login">Login</NavLink><NavLink className="nav-primary" to="/register">Register</NavLink></>}
     </nav>
   </header>;
 }
