@@ -50,7 +50,7 @@ async function createCourse(req, res) {
         const course = new Course({
             title: title,
             description: description,
-            instructor: instructor,
+            instructor: req.user._id,
             category: category,
             level: level,
             price: price,
